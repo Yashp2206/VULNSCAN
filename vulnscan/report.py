@@ -186,3 +186,34 @@ def save_pdf_report(path, network_result=None, network_risks=None, web_result=No
 
     doc.build(story)
     return path
+
+
+def generate_pdf(path, report_text):
+    """
+    Renders an already-built text report (a plain string, as returned by
+    build_text_report()) into a simple PDF file.
+
+    This matches the call used in app.py's /download route:
+        report.generate_pdf(filename, report_text)
+
+    Uses Preformatted (not Paragraph) so that special characters like
+    '<' and '>' — which can legitimately appear in this report from XSS
+    test payloads — are treated as literal text, not HTML/XML markup.
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Preformatted
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import inch
+
+    mono_style = ParagraphStyle(
+        "ReportMono", fontName="Courier", fontSize=8.5, leading=11.5,
+    )
+
+    doc = SimpleDocTemplate(
+        path, pagesize=A4,
+        topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+        leftMargin=0.6 * inch, rightMargin=0.6 * inch,
+    )
+
+    doc.build([Preformatted(report_text, mono_style)])
+    return path
