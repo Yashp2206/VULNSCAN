@@ -7,21 +7,51 @@ detection, error-based SQL injection detection) into one command-line tool.
 
 ## Features
 
-- **Network scanner**
-  - Multi-threaded TCP port scanning
-  - Service name mapping for common ports
-  - Banner grabbing for service fingerprinting
-  - Basic risk notes (e.g. flags exposed Telnet, RDP, unauthenticated DB ports)
+### Network Scanner
+- Multi-threaded TCP port scanning
+- Service name mapping for common ports
+- Banner grabbing for basic service fingerprinting
+- Basic risk analysis for potentially exposed services
+- Risk notes for services such as Telnet, RDP, and database ports
 
-- **Web scanner**
-  - Checks for missing security headers (CSP, HSTS, X-Frame-Options, etc.)
-  - Reflected XSS detection using a safe, inert marker payload
-  - Error-based SQL injection detection (looks for DB error signatures
-    returned by common quote/logic-based test payloads)
+### Web Vulnerability Scanner
+- Security header analysis
+- Detects missing security headers such as:
+  - Content-Security-Policy (CSP)
+  - Strict-Transport-Security (HSTS)
+  - X-Frame-Options
+- Reflected XSS detection using a safe, inert marker payload
+- Error-based SQL injection detection using test payloads and common database error signatures
 
-- **Reporting**
-  - Clean text report printed to console
-  - Optional JSON export for further processing
+### SSL Certificate Checker
+- Checks SSL/TLS certificate information
+- Displays certificate issuer and subject
+- Checks certificate expiry date
+- Shows remaining certificate validity
+- Provides warnings for certificates approaching expiry
+
+### Technology Detection
+- Detects technology-related information exposed through HTTP response headers
+- Helps identify server/framework information revealed by the target
+
+### Web Interface
+- Flask-based web interface
+- Target URL/host input
+- Select individual scanning modules
+- Displays scan results in a structured format
+- Provides separate sections for network, web, SSL and technology results
+
+### AI Security Recommendations
+- Generates security recommendations based on scan results
+- Uses Llama AI through Ollama
+- Provides an easy-to-understand interpretation of detected security issues
+- Helps suggest possible remediation steps
+
+### Reporting
+- Generates a readable scan report
+- PDF report generation and download
+- Report includes network and web scan findings
+- AI recommendations can be viewed separately through the web interface
 
 ## Installation
 
