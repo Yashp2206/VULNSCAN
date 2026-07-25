@@ -5,11 +5,6 @@ A lightweight vulnerability scanning prototype written in Python. It combines
 and **web application scanning** (missing security headers, reflected XSS
 detection, error-based SQL injection detection) into one command-line tool.
 
-> ⚠️ **Authorized testing only.** Only run this against systems you own or
-> have explicit written permission to test (e.g. your own machine, a local
-> vulnerable-app VM like DVWA/OWASP Juice Shop, or Nmap's public test target
-> `scanme.nmap.org`). Scanning systems without permission may be illegal.
-
 ## Features
 
 - **Network scanner**
