@@ -53,6 +53,47 @@ detection, error-based SQL injection detection) into one command-line tool.
 - Report includes network and web scan findings
 - AI recommendations can be viewed separately through the web interface
 
+## Project Architecture
+
+```text
+                              User
+                                |
+                +---------------+---------------+
+                |                               |
+                v                               v
+        Command Line Interface             Web Browser
+              main.py                         app.py
+                |                               |
+                +---------------+---------------+
+                                |
+                                v
+                       Scanning Engine
+                                |
+             +------------------+------------------+
+             |                  |                  |
+             v                  v                  v
+       Network Scanner     Web Scanner       SSL Checker
+             |                  |                  |
+             |                  |                  |
+             +------------------+------------------+
+                                |
+                                v
+                    Technology Detector
+                                |
+                                v
+                         Scan Results
+                                |
+                    +-----------+-----------+
+                    |                       |
+                    v                       v
+                 report.py             llama_ai.py
+                    |                       |
+                    v                       v
+               PDF Report             Llama / Ollama
+                                            |
+                                            v
+                                  AI Recommendations
+
 ## Installation
 
 ```bash
@@ -80,7 +121,7 @@ python main.py --network 192.168.1.10 --web http://192.168.1.10 --json report.js
 ## Example output
 
 ```
-[ Network Scan ]
+1.[ Network Scan ]
 Host: scanme.nmap.org
 Ports scanned: 13
 Open ports:
@@ -94,47 +135,172 @@ URL: http://localhost:3000
   [!] Possible reflected XSS at: http://localhost:3000/?q=<script>...
 ```
 
+2.[ Web Application Scan ]
+URL: http://localhost:3000
+
+Status code: 200
+
+Missing security headers:
+  - Content-Security-Policy:
+    Mitigates XSS and data injection attacks.
+  - Strict-Transport-Security:
+    Helps enforce HTTPS connections.
+  - X-Frame-Options:
+    Helps prevent clickjacking attacks.
+
+[!] Possible reflected XSS at:
+    http://localhost:3000/?q=<test-payload>
+
+No SQL error signatures detected with test payloads.
+
+3.[ SSL Certificate Check ]
+
+Issuer: Example Certificate Authority
+Subject: example.com
+Expires: 2027-05-10
+Days left: 289
+
+Certificate status: Valid
+
+4.[ Technology Detection ]
+
+Detected technology information:
+  - Server: Example Web Server
+  - X-Powered-By: Example Framework
+
+Technology information is based on
+headers exposed by the target web server.
+
+5.[ AI Security Recommendation ]
+
+Target: http://localhost:3000
+
+Findings:
+- Missing Content-Security-Policy header
+- Missing X-Frame-Options header
+- Possible reflected XSS
+
+Recommendations:
+1. Implement an appropriate Content-Security-Policy.
+2. Configure X-Frame-Options or an equivalent
+   frame-ancestors policy.
+3. Properly validate and encode user-controlled input.
+4. Review the affected parameter and application
+   context for potential XSS exposure.
+
 ## Project structure
 
-```
 vulnscan/
-├── main.py                    # CLI entry point
+├── main.py                         # CLI entry point
+├── app.py                          # Flask web application entry point
 ├── vulnscan/
-│   ├── network_scanner.py     # Port scanning + banner grabbing
-│   ├── web_scanner.py         # Header checks, XSS/SQLi detection
-│   └── report.py              # Text + JSON report generation
-├── requirements.txt
-└── README.md
-```
+│   ├── network_scanner.py          # TCP port scanning, service mapping + banner grabbing
+│   ├── web_scanner.py              # Security headers, XSS + SQLi detection
+│   ├── ssl_checker.py              # SSL/TLS certificate analysis
+│   ├── technology_detector.py      # Web technology detection
+│   ├── llama_ai.py                 # Llama AI security recommendations
+│   └── report.py                   # Text + PDF report generation
+├── templates/
+│   ├── index.html                  # Main scan interface
+│   ├── results.html                # Scan results page
+│   └── ai.html                     # AI recommendation page
+├── static/
+│   └── style.css                   # Web interface styling
+├── requirements.txt                # Python dependencies
+└── README.md                       # Project documentation
 
 ## How it works (talking points for interviews)
 
-- **Port scanning**: opens raw TCP sockets against a host and uses
-  `connect_ex()` to non-blockingly test whether each port accepts
-  connections, using a thread pool for speed.
-- **Banner grabbing**: after a successful connection, reads the first bytes
-  the service sends back — many services (SSH, FTP, HTTP) announce their
-  name/version unprompted, which is useful for fingerprinting.
-- **Security headers**: modern browsers enforce protections (like blocking
-  inline scripts) only if the server explicitly sends headers like
-  `Content-Security-Policy`. Missing headers are a common, easy-to-fix
-  weakness auditors flag.
-- **Reflected XSS detection**: sends a harmless marker string wrapped in a
-  `<script>` tag as a query parameter, then checks if the *raw, unescaped*
-  tag comes back in the HTML response — a sign user input isn't being
-  encoded before being echoed back.
-- **SQL injection detection**: sends characters that break out of a typical
-  SQL string context (`'`, `"`, `OR '1'='1`) and checks whether the response
-  contains known database error message fragments — a classic
-  "error-based" detection technique.
+### 1. Port Scanning
+- The network scanner uses TCP sockets to test whether ports on the target host are accepting connections.
+- Python's `connect_ex()` is used to check the connection status of each port.
+- A thread pool is used to scan multiple ports concurrently, improving scanning speed.
+- The scanner identifies common services associated with open ports.
 
-## Roadmap / possible extensions
+### 2. Service Detection and Banner Grabbing
+- After finding an open port, the scanner attempts to retrieve a service banner.
+- Some services such as SSH, FTP and HTTP may provide identifying information when a connection is established.
+- The banner information can help with basic service fingerprinting.
+- The collected information is included in the scan results.
 
-- Add authenticated scanning (session cookies/tokens)
-- Add CVE lookups for identified service versions
-- Add rate limiting / stealth scan modes
+### 3. Network Risk Analysis
+- The scanner performs basic risk analysis on discovered open ports.
+- Potentially risky or unnecessary exposed services can be flagged.
+- Examples include Telnet, RDP and database services exposed to the network.
+- These are presented as risk notes rather than confirmed vulnerabilities.
+
+### 4. Web Security Header Analysis
+- The web scanner checks HTTP response headers for common security protections.
+- Examples include:
+  - Content-Security-Policy (CSP)
+  - Strict-Transport-Security (HSTS)
+  - X-Frame-Options
+- Missing security headers are reported along with an explanation of why they matter.
+- This helps identify common web security configuration weaknesses.
+
+### 5. Reflected XSS Detection
+- The scanner uses a safe, inert marker payload as a test input.
+- The marker is sent as a query parameter to the target.
+- The response is examined to determine whether the test input is reflected without proper encoding.
+- If the input is reflected in an unsafe form, the scanner reports a possible reflected XSS issue.
+- This is a detection test and does not prove that a target is exploitable in every context.
+
+### 6. SQL Injection Detection
+- The web scanner performs error-based SQL injection checks using controlled test inputs.
+- It looks for database error signatures in the server response.
+- Common database error patterns can indicate that user input is reaching a database query unsafely.
+- The scanner reports this as a possible SQL injection finding rather than a confirmed vulnerability.
+
+### 7. SSL/TLS Certificate Checking
+- The SSL checker examines the target's SSL/TLS certificate.
+- It retrieves information such as:
+  - Certificate issuer
+  - Certificate subject
+  - Expiry date
+  - Remaining validity period
+- The scanner can warn when a certificate is approaching expiry or when the certificate check fails.
+
+### 8. Technology Detection
+- The technology detector examines HTTP response information for technology-revealing headers.
+- It can identify information exposed by the web server or application.
+- This can provide basic insight into the technologies used by the target.
+
+### 9. Report Generation
+- The collected scan results are passed to the reporting module.
+- `report.py` converts the findings into a structured report.
+- The application can generate a downloadable PDF report containing the scan findings.
+- This separates report generation from the scanning logic.
+
+### 10. AI Security Recommendations
+- The generated scan findings can be passed to the AI module.
+- `llama_ai.py` sends the report information to the Llama model through Ollama.
+- The AI analyses the findings and provides understandable security recommendations.
+- The recommendations are intended to help the user understand possible remediation steps.
+
+### 11. Web Interface
+- The Flask application provides a browser-based interface for VulnScan.
+- The user enters a target and selects the required scan modules.
+- `app.py` receives the request and calls the appropriate scanning modules.
+- The results are displayed through the web interface.
+- The user can then view AI recommendations or download the generated report.
+
+## Roadmap / Possible Extensions
+
+- Add authenticated scanning using session cookies or authentication tokens
+- Add CVE lookups for identified service and software versions
+- Add rate limiting and configurable scan modes for controlled scanning
 - Add HTML report output
-- Add async I/O (`asyncio`) for faster large-range scans
+- Add asynchronous I/O (`asyncio`) for faster large-range scans
+- Add scan history and storage using a database such as SQLite
+- Add security scoring to provide an overall risk score for each scan
+- Add cookie security analysis (`Secure`, `HttpOnly`, `SameSite`)
+- Add advanced SSL/TLS analysis including supported protocols and cipher information
+- Improve technology detection and software/version fingerprinting
+- Add more vulnerability checks to the web scanner
+- Improve AI recommendations with more detailed remediation guidance
+- Add user authentication and role-based access to the web interface
+- Add Docker support for easier deployment
+- Add cloud/VPS deployment for remote scanning and report access
 
 ## Disclaimer
 
