@@ -2,16 +2,7 @@
 """
 VulnScan - a lightweight vulnerability scanning prototype.
 
-Usage examples:
-  python main.py --network scanme.nmap.org
-  python main.py --web http://testphp.vulnweb.com --xss-param q --sqli-param cat
-  python main.py --network 192.168.1.10 --web http://192.168.1.10 --json out.json
 
-IMPORTANT: Only scan/test hosts and web apps you own or are explicitly
-authorized to test. Good, legal practice targets:
-  - Your own machine / local VMs
-  - scanme.nmap.org (Nmap project's official test target for port scans)
-  - OWASP Juice Shop / DVWA running locally (for web vuln testing)
 """
 
 import argparse
