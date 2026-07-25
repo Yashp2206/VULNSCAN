@@ -1,0 +1,23 @@
+============================================================
+VulnScan Report
+Generated: 2026-07-24T23:21:45
+============================================================
+
+[ Network Scan ]
+Host: openai.com
+Ports scanned: 13
+Duration: 1.09s
+Open ports:
+  - 80/tcp  HTTP
+  - 443/tcp  HTTPS
+  - 8080/tcp  HTTP-Alt
+
+[ Web Application Scan ]
+URL: http://openai.com
+  Status code: 403
+  Missing security headers:
+    - Content-Security-Policy: Mitigates XSS and data injection attacks.
+  No reflected XSS detected with test payload.
+  No SQL error signatures detected with test payloads.
+
+============================================================

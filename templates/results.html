@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scan Results - VulnScan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a class="back-link" href="/">&larr; New Scan</a>
+        <h1>Results for {{ target }}</h1>
+
+        {% if error %}
+        <p class="alert">{{ error }}</p>
+        {% endif %}
+
+        {% if results.network %}
+        <div class="section">
+            <h2>Network Scan</h2>
+            <p class="meta">
+                Ports scanned: {{ results.network.ports_scanned }}
+                &middot;
+                Duration: {{ results.network.duration_seconds }}s
+            </p>
+
+            {% if results.network.open_ports %}
+            <ul>
+                {% for p in results.network.open_ports %}
+                <li>
+                    <strong>{{ p.port }}/tcp</strong>
+                    — {{ p.service }}
+                    {% if p.banner %}
+                    <span class="muted">({{ p.banner }})</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="muted">No open ports found among scanned ports.</p>
+            {% endif %}
+
+            {% if results.network_risks %}
+            <p class="meta"><strong>Risk notes:</strong></p>
+            <ul>
+                {% for r in results.network_risks %}
+                <li class="alert">
+                    Port {{ r.port }}: {{ r.risk }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if results.network_error %}
+        <div class="section">
+            <p class="alert">
+                Network scan error: {{ results.network_error }}
+            </p>
+        </div>
+        {% endif %}
+
+        {% if results.web %}
+        <div class="section">
+
+            <h2>Web Vulnerability Scan</h2>
+
+            {% set headers = results.web.security_headers %}
+
+            {% if headers.error %}
+
+            <p class="alert">
+                Could not fetch URL: {{ headers.error }}
+            </p>
+
+            {% else %}
+
+            <p class="meta">
+                Status code: {{ headers.status_code }}
+            </p>
+
+            {% if headers.headers_missing %}
+            <p class="meta">
+                <strong>Missing security headers:</strong>
+            </p>
+
+            <ul>
+                {% for m in headers.headers_missing %}
+                <li>
+                    {{ m.header }}
+                    <span class="muted">
+                        — {{ m.why_it_matters }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% else %}
+
+            <p class="muted">
+                All checked security headers present.
+            </p>
+
+            {% endif %}
+            {% endif %}
+
+            {% if results.web.reflected_xss.vulnerable %}
+            <p class="alert">
+                ⚠ Possible reflected XSS at:
+                {{ results.web.reflected_xss.tested_url }}
+            </p>
+
+            {% elif not results.web.reflected_xss.error %}
+            <p class="muted">
+                No reflected XSS detected with test payload.
+            </p>
+            {% endif %}
+
+            {% if results.web.sql_injection.possible_sqli %}
+            <p class="alert">
+                ⚠ Possible SQL Injection on parameter
+                '{{ results.web.sql_injection.param_tested }}'
+            </p>
+            {% else %}
+            <p class="muted">
+                No SQL error signatures detected.
+            </p>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        {% if results.ssl %}
+        <div class="section">
+
+            <h2>SSL Certificate Check</h2>
+
+            {% if results.ssl.valid %}
+
+            <p><strong>Issuer:</strong> {{ results.ssl.issuer }}</p>
+
+            <p><strong>Subject:</strong> {{ results.ssl.subject }}</p>
+
+            <p>
+                <strong>Expires:</strong>
+                {{ results.ssl.expires }}
+                ({{ results.ssl.days_left }} days left)
+            </p>
+
+            {% if results.ssl.warning %}
+            <p class="alert">
+                ⚠ {{ results.ssl.warning }}
+            </p>
+            {% endif %}
+
+            {% else %}
+
+            <p class="alert">
+                {{ results.ssl.error }}
+            </p>
+
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        {% if results.ssl_error %}
+        <div class="section">
+            <p class="alert">{{ results.ssl_error }}</p>
+        </div>
+        {% endif %}
+
+        {% if results.tech %}
+        <div class="section">
+
+            <h2>Technology Detection</h2>
+
+            {% if results.tech.error %}
+
+            <p class="alert">
+                {{ results.tech.error }}
+            </p>
+
+            {% elif results.tech.found %}
+
+            <ul>
+                {% for d in results.tech.detected %}
+                <li>
+                    <strong>{{ d.header }}:</strong>
+                    {{ d.value }}
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% else %}
+
+            <p class="muted">
+                No technology-revealing headers found.
+            </p>
+
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        {% if results.tech_error %}
+        <div class="section">
+            <p class="alert">{{ results.tech_error }}</p>
+        </div>
+        {% endif %}
+
+        <!-- ========================= -->
+        <!-- Action Buttons -->
+        <!-- ========================= -->
+
+        <div class="section" style="text-align:center; margin-top:35px;">
+
+            <a href="/ai">
+                <button style="
+                    background:#28a745;
+                    color:white;
+                    padding:12px 24px;
+                    font-size:16px;
+                    border:none;
+                    border-radius:8px;
+                    cursor:pointer;
+                    margin-right:20px;">
+                    🤖 AI Recommendation
+                </button>
+            </a>
+
+            <a href="/download">
+                <button style="
+                    background:#007bff;
+                    color:white;
+                    padding:12px 24px;
+                    font-size:16px;
+                    border:none;
+                    border-radius:8px;
+                    cursor:pointer;">
+                    📄 Download Report
+                </button>
+            </a>
+
+        </div>
+
+    </div>
+</body>
+</html>

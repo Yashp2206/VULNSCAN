@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Recommendation - VulnScan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <a class="back-link" href="/">&larr; New Scan</a>
+
+    <h1>🤖 AI Security Recommendation</h1>
+
+    <h3>Target:</h3>
+
+    <p>{{ target }}</p>
+
+    <div class="section">
+
+        <pre style="white-space: pre-wrap;">{{ recommendation }}</pre>
+
+    </div>
+
+    <br>
+
+    <a href="/download">
+        <button>
+            📄 Download Report
+        </button>
+    </a>
+
+</div>
+
+</body>
+</html>

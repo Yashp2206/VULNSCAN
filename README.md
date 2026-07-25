@@ -1,0 +1,118 @@
+# VulnScan
+
+A lightweight vulnerability scanning prototype written in Python. It combines
+**network scanning** (open ports, service/banner detection, basic risk notes)
+and **web application scanning** (missing security headers, reflected XSS
+detection, error-based SQL injection detection) into one command-line tool.
+
+> ⚠️ **Authorized testing only.** Only run this against systems you own or
+> have explicit written permission to test (e.g. your own machine, a local
+> vulnerable-app VM like DVWA/OWASP Juice Shop, or Nmap's public test target
+> `scanme.nmap.org`). Scanning systems without permission may be illegal.
+
+## Features
+
+- **Network scanner**
+  - Multi-threaded TCP port scanning
+  - Service name mapping for common ports
+  - Banner grabbing for service fingerprinting
+  - Basic risk notes (e.g. flags exposed Telnet, RDP, unauthenticated DB ports)
+
+- **Web scanner**
+  - Checks for missing security headers (CSP, HSTS, X-Frame-Options, etc.)
+  - Reflected XSS detection using a safe, inert marker payload
+  - Error-based SQL injection detection (looks for DB error signatures
+    returned by common quote/logic-based test payloads)
+
+- **Reporting**
+  - Clean text report printed to console
+  - Optional JSON export for further processing
+
+## Installation
+
+```bash
+git clone <your-repo-url>
+cd vulnscan
+pip install -r requirements.txt
+```
+
+## Usage
+
+```bash
+# Network scan only
+python main.py --network scanme.nmap.org
+
+# Network scan with custom ports
+python main.py --network 192.168.1.10 --ports 22,80,443,3306
+
+# Web scan only
+python main.py --web http://localhost:3000 --xss-param q --sqli-param id
+
+# Both, with JSON output
+python main.py --network 192.168.1.10 --web http://192.168.1.10 --json report.json
+```
+
+## Example output
+
+```
+[ Network Scan ]
+Host: scanme.nmap.org
+Ports scanned: 13
+Open ports:
+  - 22/tcp  SSH  | banner: SSH-2.0-OpenSSH_6.6.1p1
+  - 80/tcp  HTTP
+
+[ Web Application Scan ]
+URL: http://localhost:3000
+  Missing security headers:
+    - Content-Security-Policy: Mitigates XSS and data injection attacks.
+  [!] Possible reflected XSS at: http://localhost:3000/?q=<script>...
+```
+
+## Project structure
+
+```
+vulnscan/
+├── main.py                    # CLI entry point
+├── vulnscan/
+│   ├── network_scanner.py     # Port scanning + banner grabbing
+│   ├── web_scanner.py         # Header checks, XSS/SQLi detection
+│   └── report.py              # Text + JSON report generation
+├── requirements.txt
+└── README.md
+```
+
+## How it works (talking points for interviews)
+
+- **Port scanning**: opens raw TCP sockets against a host and uses
+  `connect_ex()` to non-blockingly test whether each port accepts
+  connections, using a thread pool for speed.
+- **Banner grabbing**: after a successful connection, reads the first bytes
+  the service sends back — many services (SSH, FTP, HTTP) announce their
+  name/version unprompted, which is useful for fingerprinting.
+- **Security headers**: modern browsers enforce protections (like blocking
+  inline scripts) only if the server explicitly sends headers like
+  `Content-Security-Policy`. Missing headers are a common, easy-to-fix
+  weakness auditors flag.
+- **Reflected XSS detection**: sends a harmless marker string wrapped in a
+  `<script>` tag as a query parameter, then checks if the *raw, unescaped*
+  tag comes back in the HTML response — a sign user input isn't being
+  encoded before being echoed back.
+- **SQL injection detection**: sends characters that break out of a typical
+  SQL string context (`'`, `"`, `OR '1'='1`) and checks whether the response
+  contains known database error message fragments — a classic
+  "error-based" detection technique.
+
+## Roadmap / possible extensions
+
+- Add authenticated scanning (session cookies/tokens)
+- Add CVE lookups for identified service versions
+- Add rate limiting / stealth scan modes
+- Add HTML report output
+- Add async I/O (`asyncio`) for faster large-range scans
+
+## Disclaimer
+
+This tool is for educational and authorized security testing purposes only.
+The author is not responsible for misuse. Always get permission before
+testing any system you do not own.

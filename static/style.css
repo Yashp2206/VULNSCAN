@@ -1,0 +1,249 @@
+/* VulnScan — styled like a SOC/terminal dashboard, since that's the real
+   vernacular of security tooling: monospace data, a terminal window chrome,
+   and a status-color system (teal = info/clear, amber = warning/finding). */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --bg: #10161f;
+    --panel: #161e2b;
+    --border: #263041;
+    --text: #e7ecf3;
+    --muted: #8695ab;
+    --teal: #4fd8c4;
+    --amber: #f2a93b;
+    --red: #ef5b5b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+        radial-gradient(circle at 15% 0%, rgba(79, 216, 196, 0.06), transparent 40%),
+        radial-gradient(circle at 85% 100%, rgba(242, 169, 59, 0.05), transparent 40%);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 48px 20px;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Terminal window chrome — grounds the design in the tool's own subject
+   matter (a scanning/CLI tool) rather than a decorative flourish. */
+.container::before {
+    content: "";
+    display: block;
+    height: 34px;
+    background: #1b2432;
+    border-bottom: 1px solid var(--border);
+}
+
+.container {
+    position: relative;
+}
+
+.container::after {
+    content: "● ● ●";
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 6px;
+    color: #3a4558;
+}
+
+.container > *:not(.chrome) {
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+h1 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    margin: 28px 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+h1::after {
+    content: "";
+    display: inline-block;
+    width: 9px;
+    height: 20px;
+    background: var(--teal);
+    animation: blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+    to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    h1::after { animation: none; }
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 28px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 32px;
+}
+
+input[type="text"] {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    background: #0c111a;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+input[type="text"]:focus {
+    border-color: var(--teal);
+}
+
+input[type="text"]::placeholder {
+    color: #4a5670;
+}
+
+.checkboxes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+}
+
+.checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.92rem;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.checkboxes input[type="checkbox"] {
+    accent-color: var(--teal);
+    width: 16px;
+    height: 16px;
+}
+
+button {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: var(--teal);
+    color: #0c161a;
+    border: none;
+    padding: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+button:hover { filter: brightness(1.08); }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.disclaimer {
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding-bottom: 28px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: -4px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 24px;
+    color: var(--teal);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+}
+
+.back-link:hover { text-decoration: underline; }
+
+.section {
+    border-top: 1px solid var(--border);
+    padding-top: 22px;
+    padding-bottom: 22px;
+}
+
+.section h2 {
+    font-family: var(--mono);
+    font-size: 1.02rem;
+    margin: 0 0 12px;
+    color: var(--teal);
+}
+
+.section p, .section li {
+    font-size: 0.92rem;
+}
+
+.section ul {
+    margin: 8px 0;
+    padding-left: 18px;
+}
+
+.section li {
+    margin-bottom: 6px;
+    font-family: var(--mono);
+}
+
+.meta {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.alert {
+    color: var(--amber);
+    font-weight: 500;
+}
+
+pre {
+    background: #0c111a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    overflow-x: auto;
+    color: var(--text);
+}
+
+@media (max-width: 480px) {
+    .checkboxes { grid-template-columns: 1fr; }
+    .container > *:not(.chrome) { padding-left: 20px; padding-right: 20px; }
+}
